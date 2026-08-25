@@ -56,5 +56,5 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         with:
           api_token: ${{ secrets.MITTWALD_API_TOKEN }}
-          stack_id: ${{ vars.MITTWALD_STACK_ID }}
+          stack_id: ${{ secrets.MITTWALD_STACK_ID }}
           stack_file: ${{ github.workspace }}/deploy/stack.yaml

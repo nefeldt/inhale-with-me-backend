@@ -36,14 +36,16 @@ mw stack deploy -p <project-id> -c deploy/stack.yaml \
 
 > The exact `mw stack` flags and `deploy/stack.yaml` field names (`envs`, `ports`, `volumes`, `stack_file` vs `stack-file`) should be eyeballed against the current docs — <https://developer.mittwald.de/docs/v2/platform/workloads/containers/> and the action README <https://github.com/mittwald/deploy-container-action> — as the API evolves. The mechanism (build → GHCR → deploy-container-action with a stack UUID) is confirmed.
 
-### 3. GitHub repository secrets & variables
-In the repo's **Settings → Secrets and variables → Actions**:
+### 3. GitHub repository secrets
+In the repo's **Settings → Secrets and variables → Actions → Secrets** tab (all three
+are read via `secrets.` — do NOT put them under the *Variables* tab, or the deploy
+action panics with `Missing required environment variable INPUT_API_TOKEN`):
 
-| Kind | Name | Value |
-|------|------|-------|
-| Secret | `MITTWALD_API_TOKEN` | the `api_write` token from step 1 |
-| Secret | `JWT_SECRET` | `openssl rand -hex 32` (the production signing secret) |
-| Variable | `MITTWALD_STACK_ID` | the stack UUID from step 2 |
+| Name | Value |
+|------|-------|
+| `MITTWALD_API_TOKEN` | the `api_write` token from step 1 |
+| `MITTWALD_STACK_ID` | the stack UUID from step 2 |
+| `JWT_SECRET` | `openssl rand -hex 32` (the production signing secret) |
 
 `GITHUB_TOKEN` (for pushing to GHCR) is provided automatically.
 
