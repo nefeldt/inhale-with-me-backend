@@ -12,6 +12,7 @@ func (a *API) handlePrivacy(w http.ResponseWriter, r *http.Request)   { writeHTM
 func (a *API) handlePrivacyDE(w http.ResponseWriter, r *http.Request) { writeHTML(w, legalDoc("de", "Datenschutzerklärung", navPrivacy, privacyDE)) }
 func (a *API) handleSupport(w http.ResponseWriter, r *http.Request)   { writeHTML(w, legalDoc("en", "Support", navSupport, supportEN)) }
 func (a *API) handleSupportDE(w http.ResponseWriter, r *http.Request) { writeHTML(w, legalDoc("de", "Support", navSupport, supportDE)) }
+func (a *API) handleImpressum(w http.ResponseWriter, r *http.Request) { writeHTML(w, legalDoc("de", "Impressum", navImpressum, impressumDE)) }
 
 func writeHTML(w http.ResponseWriter, body string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -56,6 +57,18 @@ a{color:var(--accent)}
 const navPrivacy = `<a href="/privacy">EN</a><a href="/privacy/de">DE</a>`
 const navTerms = `<a href="/terms">EN</a><a href="/terms/de">DE</a>`
 const navSupport = `<a href="/support">EN</a><a href="/support/de">DE</a>`
+const navImpressum = `<a href="/privacy/de">Datenschutz</a><a href="/support/de">Support</a>`
+
+const impressumDE = `
+<h1>Impressum</h1>
+<p>Angaben gemäß § 5 DDG</p>
+<p>Noah Feldt<br>Niedertorstr. 32<br>32312 Lübbecke<br>Deutschland</p>
+
+<h2>Kontakt</h2>
+<p>E-Mail: <a href="mailto:noah@feldt.systems">noah@feldt.systems</a></p>
+
+<h2>Verantwortlich für den Inhalt (§ 18 Abs. 2 MStV)</h2>
+<p>Noah Feldt, Anschrift wie oben.</p>`
 
 // ---------------------------------------------------------------- English
 
@@ -64,7 +77,7 @@ const privacyEN = `
 <p class="date">Last updated: 2026</p>
 
 <h2>1. Controller</h2>
-<p>Responsible for data processing in this app:<br>Noah Feldt · [postal address to be added] · noah@feldt.systems</p>
+<p>Responsible for data processing in this app:<br>Noah Feldt · Niedertorstr. 32, 32312 Lübbecke, Germany · noah@feldt.systems</p>
 
 <h2>2. Overview</h2>
 <p>Inhale With Me (the “App”) lets you log smoke sessions and share them with friends. This policy explains what personal data we process and why.</p>
@@ -103,7 +116,7 @@ const privacyEN = `
 <h2>10. Changes</h2>
 <p>We may update this policy; the current version always applies.</p>
 
-<p class="muted">Template — please have it reviewed and complete the postal address before release.</p>`
+<p class="muted">Please have this reviewed by a professional before public release.</p>`
 
 const termsEN = `
 <h1>Terms of Use (EULA)</h1>
@@ -147,7 +160,7 @@ const supportEN = `
 </ul>
 
 <h2>Legal</h2>
-<p><a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Use</a></p>`
+<p><a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Use</a> · <a href="/impressum">Impressum</a></p>`
 
 // ---------------------------------------------------------------- Deutsch
 
@@ -156,7 +169,7 @@ const privacyDE = `
 <p class="date">Stand: 2026</p>
 
 <h2>1. Verantwortlicher</h2>
-<p>Verantwortlich für die Datenverarbeitung in dieser App:<br>Noah Feldt · [Anschrift ergänzen] · noah@feldt.systems</p>
+<p>Verantwortlich für die Datenverarbeitung in dieser App:<br>Noah Feldt · Niedertorstr. 32, 32312 Lübbecke · noah@feldt.systems</p>
 
 <h2>2. Überblick</h2>
 <p>Inhale With Me (die „App“) ermöglicht das Protokollieren von Rauch-Sessions und das Teilen mit Freunden. Nachfolgend erklären wir, welche personenbezogenen Daten wir zu welchen Zwecken verarbeiten.</p>
@@ -195,7 +208,7 @@ const privacyDE = `
 <h2>10. Änderungen</h2>
 <p>Wir können diese Erklärung anpassen; es gilt jeweils die aktuelle Fassung.</p>
 
-<p class="muted">Vorlage — bitte vor Veröffentlichung rechtlich prüfen und die Anschrift (Impressum) ergänzen.</p>`
+<p class="muted">Bitte vor Veröffentlichung rechtlich prüfen. <a href="/impressum">Impressum</a></p>`
 
 const termsDE = `
 <h1>Nutzungsbedingungen (EULA)</h1>
@@ -239,4 +252,4 @@ const supportDE = `
 </ul>
 
 <h2>Rechtliches</h2>
-<p><a href="/privacy/de">Datenschutzerklärung</a> · <a href="/terms/de">Nutzungsbedingungen</a></p>`
+<p><a href="/privacy/de">Datenschutzerklärung</a> · <a href="/terms/de">Nutzungsbedingungen</a> · <a href="/impressum">Impressum</a></p>`

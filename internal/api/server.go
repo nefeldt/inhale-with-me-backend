@@ -65,6 +65,7 @@ func (a *API) Router() http.Handler {
 	r.Get("/privacy/de", a.handlePrivacyDE)
 	r.Get("/support", a.handleSupport)
 	r.Get("/support/de", a.handleSupportDE)
+	r.Get("/impressum", a.handleImpressum)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/auth/register", a.handleRegister)
