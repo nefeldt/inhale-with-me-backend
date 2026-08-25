@@ -116,9 +116,7 @@ const privacyEN = `
 <p>The App is for adults (17+) and is not directed to children.</p>
 
 <h2>10. Changes</h2>
-<p>We may update this policy; the current version always applies.</p>
-
-<p class="muted">Please have this reviewed by a professional before public release.</p>`
+<p>We may update this policy; the current version always applies.</p>`
 
 const termsEN = `
 <h1>Terms of Use (EULA)</h1>
@@ -212,7 +210,7 @@ const privacyDE = `
 <h2>10. Änderungen</h2>
 <p>Wir können diese Erklärung anpassen; es gilt jeweils die aktuelle Fassung.</p>
 
-<p class="muted">Bitte vor Veröffentlichung rechtlich prüfen. <a href="/impressum">Impressum</a></p>`
+<p class="muted"><a href="/impressum">Impressum</a></p>`
 
 const termsDE = `
 <h1>Nutzungsbedingungen (EULA)</h1>
