@@ -6,7 +6,7 @@ services:
   api:
     description: "Inhale With Me REST API"
     # Full image reference (registry/owner/repo:tag) provided by CI.
-    image: "{{ .Env.IMAGE_REF }}"
+    image: "{{ .Env.IMAGE_TAG }}"
     ports:
       - "8080/tcp"
     envs:
