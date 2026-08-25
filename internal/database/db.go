@@ -56,5 +56,8 @@ func Migrate(db *gorm.DB) error {
 		&model.Friendship{},
 		&model.Reaction{},
 		&model.CostSetting{},
+		&model.Device{},
+		&model.Block{},
+		&model.Report{},
 	)
 }

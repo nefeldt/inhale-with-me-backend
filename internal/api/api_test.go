@@ -13,6 +13,7 @@ import (
 	"github.com/nfeldt/inhale-with-me/internal/auth"
 	"github.com/nfeldt/inhale-with-me/internal/config"
 	"github.com/nfeldt/inhale-with-me/internal/database"
+	"github.com/nfeldt/inhale-with-me/internal/push"
 	"github.com/nfeldt/inhale-with-me/internal/store"
 )
 
@@ -31,7 +32,7 @@ func newServer(t *testing.T) *httptest.Server {
 		BcryptCost:         4,
 		CORSAllowedOrigins: []string{"*"},
 	}
-	h := api.New(store.New(db), auth.NewManager(cfg.JWTSecret, cfg.TokenTTL), cfg).Router()
+	h := api.New(store.New(db), auth.NewManager(cfg.JWTSecret, cfg.TokenTTL), cfg, push.Noop{}).Router()
 	return httptest.NewServer(h)
 }
 

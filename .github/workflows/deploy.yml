@@ -46,6 +46,11 @@ jobs:
         env:
           IMAGE_TAG: ${{ env.IMAGE }}:${{ github.sha }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          # APNs push (optional — leave the secrets unset to run without push).
+          APNS_KEY_P8_BASE64: ${{ secrets.APNS_KEY_P8_BASE64 }}
+          APNS_KEY_ID: ${{ secrets.APNS_KEY_ID }}
+          APNS_TEAM_ID: ${{ secrets.APNS_TEAM_ID }}
+          APNS_PRODUCTION: "true"
         with:
           api_token: ${{ secrets.MITTWALD_API_TOKEN }}
           # Accept the stack id under either common name, from Secrets or Variables.

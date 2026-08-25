@@ -44,10 +44,26 @@ action panics with `Missing required environment variable INPUT_API_TOKEN`):
 | Name | Value |
 |------|-------|
 | `MITTWALD_API_TOKEN` | the `api_write` token from step 1 |
-| `MITTWALD_STACK_ID` | the stack UUID from step 2 |
+| `STACK_ID` | the stack UUID from step 2 |
 | `JWT_SECRET` | `openssl rand -hex 32` (the production signing secret) |
 
 `GITHUB_TOKEN` (for pushing to GHCR) is provided automatically.
+
+### 3b. Push notifications (optional — APNs)
+Add these secrets to enable "a friend just smoked" push. Leave them unset and the
+server runs with push disabled (no-op). Create one **APNs Auth Key** in the Apple
+Developer portal → Certificates, Identifiers & Profiles → **Keys** → **+** →
+enable **Apple Push Notifications service (APNs)** → download `AuthKey_XXXXXXXXXX.p8`
+(downloadable once).
+
+| Secret | Where to get it |
+|--------|-----------------|
+| `APNS_KEY_P8_BASE64` | base64 of the downloaded key: `base64 -i AuthKey_XXXXXXXXXX.p8 \| pbcopy` |
+| `APNS_KEY_ID` | the 10-char Key ID (shown on the key page / in the filename) |
+| `APNS_TEAM_ID` | your Apple Developer Team ID (Membership page, 10 chars) |
+
+`APNS_PRODUCTION=true` is set in the workflow (TestFlight/App Store use the
+production APNs host). `APNS_BUNDLE_ID` defaults to `feldt.systems.Inhale-With-Me`.
 
 ### 4. GHCR image visibility
 The first push creates the GHCR package. Either make it **public** (Packages → package → visibility), or keep it private and register pull credentials with the mittwald project so it can pull:

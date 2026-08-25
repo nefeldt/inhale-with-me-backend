@@ -11,6 +11,7 @@ import (
 
 	"github.com/nfeldt/inhale-with-me/internal/auth"
 	"github.com/nfeldt/inhale-with-me/internal/config"
+	"github.com/nfeldt/inhale-with-me/internal/push"
 	"github.com/nfeldt/inhale-with-me/internal/store"
 )
 
@@ -19,16 +20,20 @@ type API struct {
 	store     *store.Store
 	tokens    *auth.Manager
 	cfg       config.Config
+	notifier  push.Notifier
 	dummyHash string
 }
 
-// New builds an API.
-func New(st *store.Store, tokens *auth.Manager, cfg config.Config) *API {
+// New builds an API. A nil notifier defaults to a no-op (push disabled).
+func New(st *store.Store, tokens *auth.Manager, cfg config.Config, notifier push.Notifier) *API {
+	if notifier == nil {
+		notifier = push.Noop{}
+	}
 	// Precompute a bcrypt hash at the configured cost so a login for a
 	// non-existent account still runs a comparison — closing the timing side
 	// channel that would otherwise reveal whether an account is registered.
 	dummy, _ := auth.HashPassword("inhale-with-me-timing-equalizer", cfg.BcryptCost)
-	return &API{store: st, tokens: tokens, cfg: cfg, dummyHash: dummy}
+	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, dummyHash: dummy}
 }
 
 // Router returns the fully configured HTTP handler.
@@ -63,10 +68,21 @@ func (a *API) Router() http.Handler {
 
 			r.Get("/users/me", a.handleMe)
 			r.Patch("/users/me", a.handleUpdateMe)
+			r.Delete("/users/me", a.handleDeleteMe) // App Store account deletion
 			r.Get("/users/me/cost-settings", a.handleGetCostSettings)
 			r.Put("/users/me/cost-settings", a.handlePutCostSettings)
 			r.Get("/users", a.handleSearchUsers)
 			r.Get("/users/{id}", a.handleGetUser)
+
+			// Push device registration
+			r.Post("/devices", a.handleRegisterDevice)
+			r.Delete("/devices/{token}", a.handleUnregisterDevice)
+
+			// UGC moderation (App Store 1.2): block + report
+			r.Post("/blocks", a.handleBlockUser)
+			r.Get("/blocks", a.handleListBlocks)
+			r.Delete("/blocks/{userId}", a.handleUnblockUser)
+			r.Post("/sessions/{id}/report", a.handleReportSession)
 
 			r.Post("/sessions", a.handleCreateSession)
 			r.Get("/sessions", a.handleListSessions)

@@ -92,6 +92,37 @@ type CostSetting struct {
 	UnitCostCents int64       `gorm:"not null" json:"unit_cost_cents"`
 }
 
+// Device is an APNs push registration for a user's device.
+type Device struct {
+	ID        string    `gorm:"primaryKey;size:36" json:"id"`
+	UserID    string    `gorm:"index;not null" json:"user_id"`
+	Token     string    `gorm:"uniqueIndex;not null" json:"token"`
+	Platform  string    `gorm:"not null;default:ios" json:"platform"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// Block records that BlockerID has blocked BlockedID (App Store UGC requirement:
+// users can block abusive users). Blocked users are hidden from each other's
+// feeds and cannot send friend requests.
+type Block struct {
+	ID        string    `gorm:"primaryKey;size:36" json:"id"`
+	BlockerID string    `gorm:"not null;index;uniqueIndex:idx_block_pair" json:"blocker_id"`
+	BlockedID string    `gorm:"not null;index;uniqueIndex:idx_block_pair" json:"blocked_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// Report is a user's report of objectionable content (App Store UGC requirement:
+// users can report content for review). SessionID is optional.
+type Report struct {
+	ID             string    `gorm:"primaryKey;size:36" json:"id"`
+	ReporterID     string    `gorm:"not null;index" json:"reporter_id"`
+	ReportedUserID string    `gorm:"not null;index" json:"reported_user_id"`
+	SessionID      *string   `json:"session_id"`
+	Reason         string    `json:"reason"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
 // ---- Non-persisted API projection types ----
 
 // ReactionSummary aggregates reaction counts for a session in the feed.

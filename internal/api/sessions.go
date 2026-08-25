@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -75,7 +76,48 @@ func (a *API) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 		writeStoreError(w, err)
 		return
 	}
+	a.notifyFriendsOfSession(sess)
 	writeJSON(w, http.StatusCreated, sess)
+}
+
+// notifyFriendsOfSession sends a push to the author's friends (unless the
+// session is private). Runs asynchronously so it never blocks the response; a
+// no-op when push is not configured.
+func (a *API) notifyFriendsOfSession(sess *model.SmokeSession) {
+	if sess.Visibility == model.VisibilityPrivate {
+		return
+	}
+	go func() {
+		author, err := a.store.GetUserByID(sess.UserID)
+		if err != nil {
+			return
+		}
+		friendIDs, err := a.store.FriendIDs(sess.UserID)
+		if err != nil || len(friendIDs) == 0 {
+			return
+		}
+		devices, err := a.store.DevicesForUsers(friendIDs)
+		if err != nil || len(devices) == 0 {
+			return
+		}
+		tokens := make([]string, 0, len(devices))
+		for _, d := range devices {
+			tokens = append(tokens, d.Token)
+		}
+		name := author.Username
+		if author.DisplayName != nil && *author.DisplayName != "" {
+			name = *author.DisplayName
+		}
+		body := fmt.Sprintf("%s just had a %s", name, sess.Type)
+		invalid := a.notifier.Send(tokens, "Inhale With Me", body, map[string]string{
+			"type":      string(sess.Type),
+			"sessionId": sess.ID,
+			"authorId":  sess.UserID,
+		})
+		for _, t := range invalid {
+			_ = a.store.DeleteDeviceByToken(t)
+		}
+	}()
 }
 
 func (a *API) handleListSessions(w http.ResponseWriter, r *http.Request) {

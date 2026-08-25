@@ -46,6 +46,10 @@ func (a *API) handleCreateFriendRequest(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusUnprocessableEntity, "validation_error", "you cannot add yourself", nil)
 		return
 	}
+	if blocked, err := a.store.IsBlockedEitherWay(me, addressee.ID); err == nil && blocked {
+		writeError(w, http.StatusForbidden, "blocked", "you can't send a request to this user", nil)
+		return
+	}
 
 	f, err := a.store.CreateRequest(me, addressee.ID)
 	if err != nil {

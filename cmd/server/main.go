@@ -15,6 +15,7 @@ import (
 	"github.com/nfeldt/inhale-with-me/internal/auth"
 	"github.com/nfeldt/inhale-with-me/internal/config"
 	"github.com/nfeldt/inhale-with-me/internal/database"
+	"github.com/nfeldt/inhale-with-me/internal/push"
 	"github.com/nfeldt/inhale-with-me/internal/store"
 )
 
@@ -40,7 +41,21 @@ func main() {
 
 	st := store.New(db)
 	tokens := auth.NewManager(cfg.JWTSecret, cfg.TokenTTL)
-	handler := api.New(st, tokens, cfg).Router()
+
+	var notifier push.Notifier = push.Noop{}
+	if cfg.APNsKeyP8 != "" && cfg.APNsKeyID != "" && cfg.APNsTeamID != "" {
+		n, err := push.NewAPNs([]byte(cfg.APNsKeyP8), cfg.APNsKeyID, cfg.APNsTeamID, cfg.APNsBundleID, cfg.APNsProduction)
+		if err != nil {
+			slog.Error("APNs init failed; push disabled", "err", err)
+		} else {
+			notifier = n
+			slog.Info("APNs push enabled", "production", cfg.APNsProduction, "bundle", cfg.APNsBundleID)
+		}
+	} else {
+		slog.Info("APNs push disabled (no key configured)")
+	}
+
+	handler := api.New(st, tokens, cfg, notifier).Router()
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,

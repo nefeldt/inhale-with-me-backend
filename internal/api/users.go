@@ -77,6 +77,16 @@ func (a *API) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, u)
 }
 
+// handleDeleteMe permanently deletes the caller's account and all their data
+// (App Store account-deletion requirement).
+func (a *API) handleDeleteMe(w http.ResponseWriter, r *http.Request) {
+	if err := a.store.DeleteUser(currentUserID(r)); err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // handleSearchUsers finds users by a username/email prefix (excluding self).
 func (a *API) handleSearchUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := a.store.SearchUsers(r.URL.Query().Get("query"), queryInt(r, "limit", 20))
