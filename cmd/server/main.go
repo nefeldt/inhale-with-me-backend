@@ -52,7 +52,11 @@ func main() {
 			slog.Info("APNs push enabled", "production", cfg.APNsProduction, "bundle", cfg.APNsBundleID)
 		}
 	} else {
-		slog.Info("APNs push disabled (no key configured)")
+		// Log which piece is missing so a misconfigured secret is easy to spot.
+		slog.Info("APNs push disabled",
+			"hasKey", cfg.APNsKeyP8 != "",
+			"hasKeyID", cfg.APNsKeyID != "",
+			"hasTeamID", cfg.APNsTeamID != "")
 	}
 
 	handler := api.New(st, tokens, cfg, notifier).Router()

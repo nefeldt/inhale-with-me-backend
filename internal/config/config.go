@@ -85,7 +85,10 @@ func (c Config) IsProduction() bool { return c.Environment == "production" }
 // env var; falls back to the raw PEM in APNS_KEY_P8.
 func apnsKey() string {
 	if b64 := getenv("APNS_KEY_P8_BASE64", ""); b64 != "" {
-		if decoded, err := base64.StdEncoding.DecodeString(strings.TrimSpace(b64)); err == nil {
+		// Strip ALL whitespace: `base64` output is often wrapped across lines,
+		// and StdEncoding rejects embedded newlines.
+		clean := strings.NewReplacer("\n", "", "\r", "", "\t", "", " ", "").Replace(b64)
+		if decoded, err := base64.StdEncoding.DecodeString(clean); err == nil {
 			return string(decoded)
 		}
 	}
