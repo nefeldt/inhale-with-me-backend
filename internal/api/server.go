@@ -58,8 +58,13 @@ func (a *API) Router() http.Handler {
 	}))
 
 	r.Get("/healthz", a.handleHealth)
-	r.Get("/terms", a.handleTerms)     // public legal pages (linked from the app)
-	r.Get("/privacy", a.handlePrivacy) // and used as the App Store privacy URL
+	// Public legal + support pages (EN + DE), used for the App Store URLs.
+	r.Get("/terms", a.handleTerms)
+	r.Get("/terms/de", a.handleTermsDE)
+	r.Get("/privacy", a.handlePrivacy)
+	r.Get("/privacy/de", a.handlePrivacyDE)
+	r.Get("/support", a.handleSupport)
+	r.Get("/support/de", a.handleSupportDE)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/auth/register", a.handleRegister)
