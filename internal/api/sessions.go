@@ -83,7 +83,13 @@ func (a *API) handleListSessions(w http.ResponseWriter, r *http.Request) {
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
-	before := queryTime(r, "before")
+
+	var before *time.Time
+	var beforeID string
+	if t, id, ok := decodeCursor(r.URL.Query().Get("before")); ok {
+		before = &t
+		beforeID = id
+	}
 
 	var typ *model.SessionType
 	if t := r.URL.Query().Get("type"); t != "" {
@@ -93,7 +99,7 @@ func (a *API) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	sessions, err := a.store.ListSessionsByUser(currentUserID(r), before, typ, limit)
+	sessions, err := a.store.ListSessionsByUser(currentUserID(r), before, beforeID, typ, limit)
 	if err != nil {
 		writeStoreError(w, err)
 		return
@@ -101,7 +107,8 @@ func (a *API) handleListSessions(w http.ResponseWriter, r *http.Request) {
 
 	resp := map[string]any{"sessions": sessions, "next_before": nil}
 	if len(sessions) == limit {
-		resp["next_before"] = sessions[len(sessions)-1].OccurredAt
+		last := sessions[len(sessions)-1]
+		resp["next_before"] = encodeCursor(last.OccurredAt, last.ID)
 	}
 	writeJSON(w, http.StatusOK, resp)
 }

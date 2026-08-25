@@ -62,9 +62,18 @@ func (s *Store) SearchUsers(query string, limit int) ([]model.User, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 20
 	}
+	// Match usernames only — emails are private (never returned in PublicUser),
+	// so searching them would turn this into an email->account oracle. Escape
+	// LIKE wildcards so a query like "%" can't enumerate every account.
+	like := escapeLike(query) + "%"
 	var users []model.User
-	like := query + "%"
-	err := s.db.Where("username LIKE ? OR email LIKE ?", like, like).
+	err := s.db.Where(`username LIKE ? ESCAPE '\'`, like).
 		Order("username ASC").Limit(limit).Find(&users).Error
 	return users, err
+}
+
+// escapeLike escapes the LIKE metacharacters so user input is matched literally
+// (used with an ESCAPE '\' clause).
+func escapeLike(s string) string {
+	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
 }

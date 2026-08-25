@@ -143,6 +143,7 @@ func (a *API) handlePutCostSettings(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "bad_request", "invalid request body", nil)
 		return
 	}
+	seen := make(map[model.SessionType]bool, len(req.Settings))
 	for _, c := range req.Settings {
 		if !c.Type.Valid() {
 			writeValidation(w, map[string]string{"settings": "invalid session type: " + string(c.Type)})
@@ -152,6 +153,11 @@ func (a *API) handlePutCostSettings(w http.ResponseWriter, r *http.Request) {
 			writeValidation(w, map[string]string{"settings": "unit_cost_cents must be zero or greater"})
 			return
 		}
+		if seen[c.Type] {
+			writeValidation(w, map[string]string{"settings": "duplicate session type: " + string(c.Type)})
+			return
+		}
+		seen[c.Type] = true
 	}
 	me := currentUserID(r)
 	if err := a.store.ReplaceCostSettings(me, req.Settings); err != nil {

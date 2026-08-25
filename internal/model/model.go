@@ -65,9 +65,13 @@ type Friendship struct {
 	ID          string           `gorm:"primaryKey;size:36" json:"id"`
 	RequesterID string           `gorm:"not null;index;uniqueIndex:idx_friend_pair" json:"requester_id"`
 	AddresseeID string           `gorm:"not null;index;uniqueIndex:idx_friend_pair" json:"addressee_id"`
-	Status      FriendshipStatus `gorm:"not null;default:pending" json:"status"`
-	CreatedAt   time.Time        `json:"created_at"`
-	UpdatedAt   time.Time        `json:"updated_at"`
+	// PairKey is the canonical (order-independent) key of the two user ids. Its
+	// unique index guarantees at most one friendship row per unordered pair, so
+	// concurrent mutual requests can't create both (A,B) and (B,A).
+	PairKey   string           `gorm:"uniqueIndex" json:"-"`
+	Status    FriendshipStatus `gorm:"not null;default:pending" json:"status"`
+	CreatedAt time.Time        `json:"created_at"`
+	UpdatedAt time.Time        `json:"updated_at"`
 }
 
 // Reaction is a user's reaction (default "cheers") on a session. One row per

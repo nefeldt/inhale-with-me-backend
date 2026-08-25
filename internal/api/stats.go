@@ -63,7 +63,13 @@ func computeStats(sessions []model.SmokeSession, costMap map[model.SessionType]i
 
 // bucket aggregates sessions occurring at/after `from` (nil = all time).
 func bucket(sessions []model.SmokeSession, from *time.Time, costMap map[model.SessionType]int64) model.StatBucket {
-	b := model.StatBucket{ByType: make(map[model.SessionType]int, len(model.SessionTypes)), From: from}
+	b := model.StatBucket{ByType: make(map[model.SessionType]int, len(model.SessionTypes))}
+	// Serialize the boundary as RFC3339 UTC per the API contract (it is still the
+	// same instant as the local midnight used for filtering below).
+	if from != nil {
+		u := from.UTC()
+		b.From = &u
+	}
 	for _, t := range model.SessionTypes {
 		b.ByType[t] = 0
 	}
@@ -108,8 +114,8 @@ func computeStreaks(sessions []model.SmokeSession, loc *time.Location) (current,
 		}
 	}
 
-	// Days since last session.
-	ds := int(dayStart(time.Now().In(loc)).Sub(dayStart(last.In(loc))).Hours() / 24)
+	// Days since last session, counted in whole calendar days (DST-safe).
+	ds := civilDaysBetween(last.In(loc), time.Now().In(loc))
 	if ds < 0 {
 		ds = 0
 	}
@@ -150,6 +156,16 @@ func computeStreaks(sessions []model.SmokeSession, loc *time.Location) (current,
 func dayStart(t time.Time) time.Time {
 	y, m, d := t.Date()
 	return time.Date(y, m, d, 0, 0, 0, 0, t.Location())
+}
+
+// civilDaysBetween returns the number of whole calendar days from -> to, using
+// the local calendar dates. Anchoring both civil dates to UTC midnight avoids
+// the DST bug of dividing an elapsed Duration by 24h (a spring-forward day is
+// only 23h of wall-clock time).
+func civilDaysBetween(from, to time.Time) int {
+	a := time.Date(from.Year(), from.Month(), from.Day(), 0, 0, 0, 0, time.UTC)
+	b := time.Date(to.Year(), to.Month(), to.Day(), 0, 0, 0, 0, time.UTC)
+	return int(b.Sub(a).Hours() / 24)
 }
 
 // mondayStart returns 00:00 on the Monday of t's week.

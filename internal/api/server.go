@@ -16,14 +16,19 @@ import (
 
 // API bundles the dependencies shared by every handler.
 type API struct {
-	store  *store.Store
-	tokens *auth.Manager
-	cfg    config.Config
+	store     *store.Store
+	tokens    *auth.Manager
+	cfg       config.Config
+	dummyHash string
 }
 
 // New builds an API.
 func New(st *store.Store, tokens *auth.Manager, cfg config.Config) *API {
-	return &API{store: st, tokens: tokens, cfg: cfg}
+	// Precompute a bcrypt hash at the configured cost so a login for a
+	// non-existent account still runs a comparison — closing the timing side
+	// channel that would otherwise reveal whether an account is registered.
+	dummy, _ := auth.HashPassword("inhale-with-me-timing-equalizer", cfg.BcryptCost)
+	return &API{store: st, tokens: tokens, cfg: cfg, dummyHash: dummy}
 }
 
 // Router returns the fully configured HTTP handler.

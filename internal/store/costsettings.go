@@ -14,7 +14,7 @@ func (s *Store) GetCostSettings(userID string) ([]model.CostSetting, error) {
 
 // ReplaceCostSettings atomically replaces a user's full set of cost settings.
 func (s *Store) ReplaceCostSettings(userID string, settings []model.CostSetting) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return translate(s.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("user_id = ?", userID).Delete(&model.CostSetting{}).Error; err != nil {
 			return err
 		}
@@ -25,7 +25,7 @@ func (s *Store) ReplaceCostSettings(userID string, settings []model.CostSetting)
 			settings[i].UserID = userID
 		}
 		return tx.Create(&settings).Error
-	})
+	}))
 }
 
 // CostMap returns a user's unit costs keyed by session type.

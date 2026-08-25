@@ -79,7 +79,14 @@ func (a *API) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u, err := a.store.GetUserByLogin(req.Login)
-	if err != nil || !auth.CheckPassword(u.PasswordHash, req.Password) {
+	if err != nil {
+		// Run a comparison anyway so a missing account isn't measurably faster
+		// than a wrong password (constant-time-ish, defeats user enumeration).
+		auth.CheckPassword(a.dummyHash, req.Password)
+		writeError(w, http.StatusUnauthorized, "invalid_credentials", "invalid login or password", nil)
+		return
+	}
+	if !auth.CheckPassword(u.PasswordHash, req.Password) {
 		writeError(w, http.StatusUnauthorized, "invalid_credentials", "invalid login or password", nil)
 		return
 	}

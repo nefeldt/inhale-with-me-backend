@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/nfeldt/inhale-with-me/internal/model"
 )
@@ -13,7 +14,13 @@ func (a *API) handleFeed(w http.ResponseWriter, r *http.Request) {
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
-	before := queryTime(r, "before")
+
+	var before *time.Time
+	var beforeID string
+	if t, id, ok := decodeCursor(r.URL.Query().Get("before")); ok {
+		before = &t
+		beforeID = id
+	}
 
 	friendIDs, err := a.store.FriendIDs(me)
 	if err != nil {
@@ -21,7 +28,7 @@ func (a *API) handleFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessions, err := a.store.FeedSessions(friendIDs, before, limit)
+	sessions, err := a.store.FeedSessions(friendIDs, before, beforeID, limit)
 	if err != nil {
 		writeStoreError(w, err)
 		return

@@ -44,6 +44,7 @@ func (s *Store) CreateRequest(requesterID, addresseeID string) (*model.Friendshi
 		default: // declined -> revive
 			existing.RequesterID = requesterID
 			existing.AddresseeID = addresseeID
+			existing.PairKey = pairKey(requesterID, addresseeID)
 			existing.Status = model.FriendshipPending
 			if err := s.db.Save(existing).Error; err != nil {
 				return nil, err
@@ -55,8 +56,11 @@ func (s *Store) CreateRequest(requesterID, addresseeID string) (*model.Friendshi
 			ID:          newID(),
 			RequesterID: requesterID,
 			AddresseeID: addresseeID,
+			PairKey:     pairKey(requesterID, addresseeID),
 			Status:      model.FriendshipPending,
 		}
+		// The unique PairKey index turns a lost race (concurrent mutual request)
+		// into ErrConflict instead of a duplicate row.
 		if err := s.db.Create(f).Error; err != nil {
 			return nil, translate(err)
 		}
@@ -64,6 +68,15 @@ func (s *Store) CreateRequest(requesterID, addresseeID string) (*model.Friendshi
 	default:
 		return nil, err
 	}
+}
+
+// pairKey returns an order-independent key for a pair of user ids, so (A,B) and
+// (B,A) map to the same value.
+func pairKey(a, b string) string {
+	if a <= b {
+		return a + "|" + b
+	}
+	return b + "|" + a
 }
 
 // SetFriendshipStatus updates the status of a friendship row.

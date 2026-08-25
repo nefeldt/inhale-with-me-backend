@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/nfeldt/inhale-with-me/internal/model"
+	"gorm.io/gorm"
 )
 
 // CreateSession inserts a new smoke session, assigning an ID if unset.
@@ -27,21 +28,33 @@ func (s *Store) GetSession(id string) (*model.SmokeSession, error) {
 }
 
 // ListSessionsByUser returns a user's sessions newest-first, optionally filtered
-// by type and paginated with a `before` cursor on occurred_at.
-func (s *Store) ListSessionsByUser(userID string, before *time.Time, typ *model.SessionType, limit int) ([]model.SmokeSession, error) {
+// by type and paginated with a composite (occurred_at, id) cursor. beforeID may
+// be empty for a timestamp-only cursor.
+func (s *Store) ListSessionsByUser(userID string, before *time.Time, beforeID string, typ *model.SessionType, limit int) ([]model.SmokeSession, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
 	q := s.db.Where("user_id = ?", userID)
-	if before != nil {
-		q = q.Where("occurred_at < ?", *before)
-	}
+	q = applyBeforeCursor(q, before, beforeID)
 	if typ != nil {
 		q = q.Where("type = ?", *typ)
 	}
 	var out []model.SmokeSession
 	err := q.Order("occurred_at DESC, id DESC").Limit(limit).Find(&out).Error
 	return out, err
+}
+
+// applyBeforeCursor adds the keyset predicate matching the (occurred_at DESC,
+// id DESC) ordering. The composite form is required so rows sharing a timestamp
+// at a page boundary are neither skipped nor duplicated.
+func applyBeforeCursor(q *gorm.DB, before *time.Time, beforeID string) *gorm.DB {
+	if before == nil {
+		return q
+	}
+	if beforeID == "" {
+		return q.Where("occurred_at < ?", *before)
+	}
+	return q.Where("occurred_at < ? OR (occurred_at = ? AND id < ?)", *before, *before, beforeID)
 }
 
 // AllSessionsByUser returns every session for a user, newest-first. Used by the
@@ -81,8 +94,8 @@ func (s *Store) CanView(viewerID string, sess *model.SmokeSession) (bool, error)
 }
 
 // FeedSessions returns friends' visible sessions newest-first for the feed,
-// paginated with a `before` cursor.
-func (s *Store) FeedSessions(friendIDs []string, before *time.Time, limit int) ([]model.SmokeSession, error) {
+// paginated with a composite (occurred_at, id) cursor.
+func (s *Store) FeedSessions(friendIDs []string, before *time.Time, beforeID string, limit int) ([]model.SmokeSession, error) {
 	if len(friendIDs) == 0 {
 		return []model.SmokeSession{}, nil
 	}
@@ -91,9 +104,7 @@ func (s *Store) FeedSessions(friendIDs []string, before *time.Time, limit int) (
 	}
 	q := s.db.Where("user_id IN ?", friendIDs).
 		Where("visibility IN ?", []model.Visibility{model.VisibilityPublic, model.VisibilityFriends})
-	if before != nil {
-		q = q.Where("occurred_at < ?", *before)
-	}
+	q = applyBeforeCursor(q, before, beforeID)
 	var out []model.SmokeSession
 	err := q.Order("occurred_at DESC, id DESC").Limit(limit).Find(&out).Error
 	return out, err

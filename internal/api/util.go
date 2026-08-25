@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -38,15 +39,31 @@ func queryInt(r *http.Request, key string, def int) int {
 	return def
 }
 
-// queryTime parses an RFC3339 query parameter, returning nil when absent/invalid.
-func queryTime(r *http.Request, key string) *time.Time {
-	v := r.URL.Query().Get(key)
-	if v == "" {
-		return nil
+// encodeCursor builds an opaque keyset pagination cursor from a row's
+// (occurred_at, id). Clients treat it as opaque and pass it back as `before`.
+func encodeCursor(t time.Time, id string) string {
+	raw := t.UTC().Format(time.RFC3339Nano) + "|" + id
+	return base64.RawURLEncoding.EncodeToString([]byte(raw))
+}
+
+// decodeCursor parses a cursor produced by encodeCursor into (occurred_at, id).
+// It also accepts a bare RFC3339 timestamp (id empty) for manual use. ok is
+// false when the value is absent or unparseable.
+func decodeCursor(raw string) (t time.Time, id string, ok bool) {
+	if raw == "" {
+		return time.Time{}, "", false
 	}
-	t, err := time.Parse(time.RFC3339, v)
-	if err != nil {
-		return nil
+	if decoded, err := base64.RawURLEncoding.DecodeString(raw); err == nil {
+		before, rest, found := strings.Cut(string(decoded), "|")
+		if parsed, err := time.Parse(time.RFC3339Nano, before); err == nil {
+			if found {
+				id = rest
+			}
+			return parsed, id, true
+		}
 	}
-	return &t
+	if parsed, err := time.Parse(time.RFC3339, raw); err == nil {
+		return parsed, "", true
+	}
+	return time.Time{}, "", false
 }
