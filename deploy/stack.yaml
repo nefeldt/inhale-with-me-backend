@@ -1,7 +1,8 @@
 # mittwald Container Hosting stack definition, consumed by
-# mittwald/deploy-container-action. Values in {{ .Env.X }} are filled from the
-# GitHub Actions step's `env:` block (see .github/workflows/deploy.yml), so real
-# secrets never live in this file.
+# mittwald/deploy-container-action. The whole file is rendered as a Go template,
+# so ".Env.NAME" placeholders below are filled from the deploy step's env: block
+# (see .github/workflows/deploy.yml) and real secrets never live in this file.
+# NOTE: do not write template braces in comments — they are rendered too.
 services:
   api:
     description: "Inhale With Me REST API"
