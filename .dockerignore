@@ -1,0 +1,12 @@
+.git
+.github
+*.md
+Makefile
+.env
+.env.*
+data/
+*.db
+*.db-shm
+*.db-wal
+bin/
+.DS_Store

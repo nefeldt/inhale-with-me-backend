@@ -1,0 +1,24 @@
+# Binaries
+/bin/
+/server
+/out/
+
+# Local database + WAL files
+/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# Test / coverage
+*.out
+coverage.*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

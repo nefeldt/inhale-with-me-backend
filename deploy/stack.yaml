@@ -1,0 +1,24 @@
+# mittwald Container Hosting stack definition, consumed by
+# mittwald/deploy-container-action. Values in {{ .Env.X }} are filled from the
+# GitHub Actions step's `env:` block (see .github/workflows/deploy.yml), so real
+# secrets never live in this file.
+services:
+  api:
+    description: "Inhale With Me REST API"
+    # Full image reference (registry/owner/repo:tag) provided by CI.
+    image: "{{ .Env.IMAGE_REF }}"
+    ports:
+      - "8080/tcp"
+    envs:
+      ENVIRONMENT: "production"
+      PORT: "8080"
+      DB_PATH: "/data/inhale.db"
+      JWT_SECRET: "{{ .Env.JWT_SECRET }}"
+      CORS_ALLOWED_ORIGINS: "*"
+    volumes:
+      # Persist the SQLite database across container recreations/redeploys.
+      - "inhale-data:/data"
+
+volumes:
+  inhale-data:
+    name: inhale-data
