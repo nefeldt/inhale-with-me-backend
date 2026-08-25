@@ -43,7 +43,7 @@ const termsHTML = `<!doctype html>
 <h2>7. Changes</h2>
 <p>We may update these Terms; continued use after changes constitutes acceptance.</p>
 <h2>8. Contact</h2>
-<p>Questions: support@inhalewithme.app</p>
+<p>Questions: noah@feldt.systems</p>
 </body></html>`
 
 const privacyHTML = `<!doctype html>
@@ -73,5 +73,5 @@ const privacyHTML = `<!doctype html>
 <h2>Children</h2>
 <p>The App is for adults (18+) and is not directed to children.</p>
 <h2>Contact</h2>
-<p>privacy@inhalewithme.app</p>
+<p>noah@feldt.systems</p>
 </body></html>`
