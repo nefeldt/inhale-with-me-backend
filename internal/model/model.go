@@ -44,6 +44,7 @@ type SmokeSession struct {
 	ID         string      `gorm:"primaryKey;size:36" json:"id"`
 	UserID     string      `gorm:"index;not null" json:"user_id"`
 	Type       SessionType `gorm:"not null" json:"type"`
+	Subtype    *string     `json:"subtype"` // e.g. cigarette: factory/rolled/stuffed
 	Quantity   float64     `gorm:"not null;default:1" json:"quantity"`
 	Note       *string     `json:"note"`
 	Mood       *string     `json:"mood"`
@@ -110,6 +111,28 @@ type Block struct {
 	BlockerID string    `gorm:"not null;index;uniqueIndex:idx_block_pair" json:"blocker_id"`
 	BlockedID string    `gorm:"not null;index;uniqueIndex:idx_block_pair" json:"blocked_id"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// CustomType is a user-defined session type ("Genussmittel") shown alongside the
+// built-in types in the quick-log grid.
+type CustomType struct {
+	UserID    string    `gorm:"primaryKey;size:36" json:"-"`
+	Name      string    `gorm:"primaryKey;size:40" json:"name"`
+	Color     string    `json:"color"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// LocationShare is a one-to-one, time-limited location snapshot ("I'm coming
+// over"). Only the recipient can see it and it expires after a short window.
+type LocationShare struct {
+	ID          string    `gorm:"primaryKey;size:36" json:"id"`
+	SenderID    string    `gorm:"index;not null" json:"sender_id"`
+	RecipientID string    `gorm:"index;not null" json:"recipient_id"`
+	Lat         float64   `json:"lat"`
+	Lng         float64   `json:"lng"`
+	Message     *string   `json:"message"`
+	CreatedAt   time.Time `json:"created_at"`
+	ExpiresAt   time.Time `json:"expires_at"`
 }
 
 // Report is a user's report of objectionable content (App Store UGC requirement:

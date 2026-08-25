@@ -17,6 +17,29 @@ var (
 func validEmail(s string) bool    { return len(s) <= 254 && emailRe.MatchString(s) }
 func validUsername(s string) bool { return usernameRe.MatchString(s) }
 
+// typeNameRe allows built-in and custom session type names (lowercase).
+var typeNameRe = regexp.MustCompile(`^[a-z0-9][a-z0-9 ._-]{0,29}$`)
+
+func validTypeName(s string) bool { return typeNameRe.MatchString(s) }
+
+var hexColorRe = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
+
+// cleanColor returns a valid #RRGGBB color or an empty string.
+func cleanColor(s string) string {
+	s = strings.TrimSpace(s)
+	if hexColorRe.MatchString(s) {
+		return s
+	}
+	return ""
+}
+
+func deref(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
+}
+
 // cleanPtr trims a string pointer, returning nil for empty/whitespace values.
 func cleanPtr(p *string) *string {
 	if p == nil {

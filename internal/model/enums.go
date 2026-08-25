@@ -9,16 +9,39 @@ const (
 	TypeVape      SessionType = "vape"
 	TypeCigar     SessionType = "cigar"
 	TypePipe      SessionType = "pipe"
+	TypeBong      SessionType = "bong"
 	TypeOther     SessionType = "other"
 )
 
-// SessionTypes lists every valid session type.
-var SessionTypes = []SessionType{TypeCigarette, TypeJoint, TypeVape, TypeCigar, TypePipe, TypeOther}
+// SessionTypes lists the built-in session types shown in the app. Users may also
+// log custom types (any short lowercase string), so the API does not restrict
+// the type to this list — it is only the default set.
+var SessionTypes = []SessionType{TypeCigarette, TypeJoint, TypeVape, TypeCigar, TypePipe, TypeBong, TypeOther}
 
-// Valid reports whether t is a known session type.
+// Valid reports whether t is a built-in session type.
 func (t SessionType) Valid() bool {
 	for _, v := range SessionTypes {
 		if v == t {
+			return true
+		}
+	}
+	return false
+}
+
+// Cigarette subtypes (only meaningful when the type is "cigarette").
+const (
+	SubtypeFactory = "factory" // ready-made / manufactured
+	SubtypeRolled  = "rolled"  // hand-rolled
+	SubtypeStuffed = "stuffed" // tube-filled / stopfen
+)
+
+// CigaretteSubtypes lists the valid cigarette subtypes.
+var CigaretteSubtypes = []string{SubtypeFactory, SubtypeRolled, SubtypeStuffed}
+
+// ValidSubtype reports whether s is a known cigarette subtype.
+func ValidSubtype(s string) bool {
+	for _, v := range CigaretteSubtypes {
+		if v == s {
 			return true
 		}
 	}

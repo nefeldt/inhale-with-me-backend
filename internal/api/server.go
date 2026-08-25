@@ -112,6 +112,15 @@ func (a *API) Router() http.Handler {
 			r.Delete("/friends/{userId}", a.handleRemoveFriend)
 
 			r.Get("/feed", a.handleFeed)
+
+			// Custom session types ("Genussmittel")
+			r.Get("/custom-types", a.handleListCustomTypes)
+			r.Post("/custom-types", a.handleCreateCustomType)
+			r.Delete("/custom-types/{name}", a.handleDeleteCustomType)
+
+			// Location sharing (one-to-one, time-limited)
+			r.Post("/location-shares", a.handleCreateLocationShare)
+			r.Get("/location-shares", a.handleListLocationShares)
 		})
 	})
 

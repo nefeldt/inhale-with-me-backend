@@ -102,9 +102,10 @@ func TestAuthSessionAndStats(t *testing.T) {
 		t.Fatalf("create session: want 201 got %d body %v", resp.StatusCode, body)
 	}
 
-	// Invalid type is a validation error.
+	// An invalid type name is a validation error (custom types are allowed, but
+	// must be short, lowercase, and use a limited charset).
 	if resp, _ := doJSON(t, http.MethodPost, srv.URL+"/api/v1/sessions", token, map[string]any{
-		"type": "bong",
+		"type": "!!!",
 	}); resp.StatusCode != http.StatusUnprocessableEntity {
 		t.Fatalf("invalid type: want 422 got %d", resp.StatusCode)
 	}

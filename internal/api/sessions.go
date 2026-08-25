@@ -13,6 +13,7 @@ import (
 
 type createSessionRequest struct {
 	Type       model.SessionType `json:"type"`
+	Subtype    *string           `json:"subtype"`
 	Quantity   *float64          `json:"quantity"`
 	Note       *string           `json:"note"`
 	Mood       *string           `json:"mood"`
@@ -30,8 +31,19 @@ func (a *API) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fields := map[string]string{}
-	if !req.Type.Valid() {
+	typ := model.SessionType(strings.ToLower(strings.TrimSpace(string(req.Type))))
+	if !validTypeName(string(typ)) {
 		fields["type"] = "invalid session type"
+	}
+	var subtype *string
+	if req.Subtype != nil {
+		if st := strings.ToLower(strings.TrimSpace(*req.Subtype)); st != "" {
+			if typ == model.TypeCigarette && !model.ValidSubtype(st) {
+				fields["subtype"] = "invalid cigarette subtype"
+			} else {
+				subtype = &st
+			}
+		}
 	}
 	quantity := 1.0
 	if req.Quantity != nil {
@@ -63,7 +75,8 @@ func (a *API) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 
 	sess := &model.SmokeSession{
 		UserID:     currentUserID(r),
-		Type:       req.Type,
+		Type:       typ,
+		Subtype:    subtype,
 		Quantity:   quantity,
 		Note:       cleanPtr(req.Note),
 		Mood:       cleanPtr(req.Mood),
@@ -175,6 +188,7 @@ func (a *API) handleGetSession(w http.ResponseWriter, r *http.Request) {
 
 type updateSessionRequest struct {
 	Type       *model.SessionType `json:"type"`
+	Subtype    *string            `json:"subtype"`
 	Quantity   *float64           `json:"quantity"`
 	Note       *string            `json:"note"`
 	Mood       *string            `json:"mood"`
@@ -203,10 +217,22 @@ func (a *API) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
 
 	fields := map[string]string{}
 	if req.Type != nil {
-		if !req.Type.Valid() {
+		t := model.SessionType(strings.ToLower(strings.TrimSpace(string(*req.Type))))
+		if !validTypeName(string(t)) {
 			fields["type"] = "invalid session type"
 		} else {
-			sess.Type = *req.Type
+			sess.Type = t
+		}
+	}
+	if req.Subtype != nil {
+		st := strings.ToLower(strings.TrimSpace(*req.Subtype))
+		switch {
+		case st == "":
+			sess.Subtype = nil
+		case sess.Type == model.TypeCigarette && !model.ValidSubtype(st):
+			fields["subtype"] = "invalid cigarette subtype"
+		default:
+			sess.Subtype = &st
 		}
 	}
 	if req.Quantity != nil {

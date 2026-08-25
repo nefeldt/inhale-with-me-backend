@@ -90,6 +90,14 @@ func (a *API) handleAddReaction(w http.ResponseWriter, r *http.Request) {
 		writeStoreError(w, err)
 		return
 	}
+	// Notify the session's author that someone reacted.
+	if sess.UserID != me {
+		reactor, _ := a.store.GetUserByID(me)
+		a.pushToUser(sess.UserID, "Inhale With Me", displayName(reactor)+" reacted: "+typ, map[string]string{
+			"kind":      "reaction",
+			"sessionId": sess.ID,
+		})
+	}
 	writeJSON(w, http.StatusCreated, reaction)
 }
 

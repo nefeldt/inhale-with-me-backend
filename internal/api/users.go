@@ -155,7 +155,7 @@ func (a *API) handlePutCostSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	seen := make(map[model.SessionType]bool, len(req.Settings))
 	for _, c := range req.Settings {
-		if !c.Type.Valid() {
+		if !validTypeName(strings.ToLower(strings.TrimSpace(string(c.Type)))) {
 			writeValidation(w, map[string]string{"settings": "invalid session type: " + string(c.Type)})
 			return
 		}

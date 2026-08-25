@@ -59,5 +59,7 @@ func Migrate(db *gorm.DB) error {
 		&model.Device{},
 		&model.Block{},
 		&model.Report{},
+		&model.CustomType{},
+		&model.LocationShare{},
 	)
 }

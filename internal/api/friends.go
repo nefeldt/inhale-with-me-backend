@@ -60,6 +60,10 @@ func (a *API) handleCreateFriendRequest(w http.ResponseWriter, r *http.Request) 
 		writeStoreError(w, err)
 		return
 	}
+	requester, _ := a.store.GetUserByID(me)
+	a.pushToUser(addressee.ID, "Inhale With Me", displayName(requester)+" sent you a friend request", map[string]string{
+		"kind": "friend_request",
+	})
 	writeJSON(w, http.StatusCreated, f)
 }
 
@@ -120,6 +124,12 @@ func (a *API) respondToRequest(w http.ResponseWriter, r *http.Request, status mo
 	if err != nil {
 		writeStoreError(w, err)
 		return
+	}
+	if status == model.FriendshipAccepted {
+		accepter, _ := a.store.GetUserByID(me)
+		a.pushToUser(f.RequesterID, "Inhale With Me", displayName(accepter)+" accepted your friend request", map[string]string{
+			"kind": "friend_accepted",
+		})
 	}
 	writeJSON(w, http.StatusOK, updated)
 }
