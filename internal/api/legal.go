@@ -88,6 +88,7 @@ const privacyEN = `
 <li><strong>Activity you log:</strong> session type, quantity, time, optional note/mood/location, and visibility.</li>
 <li><strong>Social:</strong> friends, friend requests, reactions.</li>
 <li><strong>Device token:</strong> an Apple push token, only if you enable notifications.</li>
+<li><strong>Location (optional):</strong> only when you actively share it, your coordinates are sent to the chosen friend and stored briefly (about 1 hour), then discarded. No background tracking.</li>
 <li><strong>Technical:</strong> IP address and server logs when the app calls our API.</li>
 </ul>
 
@@ -95,6 +96,7 @@ const privacyEN = `
 <ul>
 <li>Providing the app and your account: Art. 6(1)(b) (contract).</li>
 <li>Push notifications: Art. 6(1)(a) (consent); revocable in iOS Settings.</li>
+<li>Location sharing: Art. 6(1)(a) (consent), only when you choose to share.</li>
 <li>Operation, security, abuse prevention, logs: Art. 6(1)(f) (legitimate interests).</li>
 </ul>
 
@@ -180,6 +182,7 @@ const privacyDE = `
 <li><strong>Aktivitätsdaten:</strong> protokollierte Sessions (Typ, Menge, Zeitpunkt, optional Notiz/Stimmung/Ort, Sichtbarkeit).</li>
 <li><strong>Soziale Daten:</strong> Freundschaften, Anfragen, Reaktionen.</li>
 <li><strong>Geräte-Token:</strong> ein Apple-Push-Token, nur wenn du Benachrichtigungen aktivierst.</li>
+<li><strong>Standort (optional):</strong> nur wenn du ihn aktiv teilst, werden deine Koordinaten an den gewählten Freund gesendet und kurz (ca. 1 Stunde) gespeichert, danach verworfen. Keine Hintergrund-Verfolgung.</li>
 <li><strong>Technische Daten:</strong> IP-Adresse und Server-Logs beim Zugriff auf unsere API.</li>
 </ul>
 
@@ -187,6 +190,7 @@ const privacyDE = `
 <ul>
 <li>Bereitstellung der App und deines Kontos: Art. 6 Abs. 1 lit. b DSGVO (Vertrag).</li>
 <li>Push-Benachrichtigungen: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung); jederzeit in den iOS-Einstellungen widerrufbar.</li>
+<li>Standort-Teilen: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung), nur wenn du aktiv teilst.</li>
 <li>Betrieb, Sicherheit, Missbrauchsvermeidung, Logs: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).</li>
 </ul>
 
