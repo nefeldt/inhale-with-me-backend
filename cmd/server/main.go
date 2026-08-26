@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -27,6 +28,16 @@ func main() {
 	if err != nil {
 		slog.Error("load config", "err", err)
 		os.Exit(1)
+	}
+
+	// Admin CLI: `server reset-password <login> <new-password>` (and future
+	// one-off commands). Runs against the same DB, then exits without serving.
+	if len(os.Args) > 1 {
+		if err := runCommand(os.Args[1:], cfg); err != nil {
+			slog.Error("command failed", "err", err)
+			os.Exit(1)
+		}
+		return
 	}
 
 	db, err := database.Open(cfg.DBPath, !cfg.IsProduction())
@@ -89,4 +100,50 @@ func main() {
 	if sqlDB, err := db.DB(); err == nil {
 		_ = sqlDB.Close()
 	}
+}
+
+// runCommand dispatches admin subcommands invoked as `server <cmd> ...`.
+func runCommand(args []string, cfg config.Config) error {
+	switch args[0] {
+	case "reset-password":
+		if len(args) != 3 {
+			return fmt.Errorf("usage: server reset-password <login> <new-password>")
+		}
+		return resetPassword(cfg, args[1], args[2])
+	default:
+		return fmt.Errorf("unknown command %q (available: reset-password)", args[0])
+	}
+}
+
+// resetPassword sets a user's password to newPassword, identified by username or
+// email. Opens the same database the server uses.
+func resetPassword(cfg config.Config, login, newPassword string) error {
+	if len(newPassword) < 8 {
+		return fmt.Errorf("password must be at least 8 characters")
+	}
+	db, err := database.Open(cfg.DBPath, !cfg.IsProduction())
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+	defer func() {
+		if sqlDB, err := db.DB(); err == nil {
+			_ = sqlDB.Close()
+		}
+	}()
+
+	st := store.New(db)
+	u, err := st.GetUserByLogin(login)
+	if err != nil {
+		return fmt.Errorf("find user %q: %w", login, err)
+	}
+	hash, err := auth.HashPassword(newPassword, cfg.BcryptCost)
+	if err != nil {
+		return fmt.Errorf("hash password: %w", err)
+	}
+	u.PasswordHash = hash
+	if err := st.UpdateUser(u); err != nil {
+		return fmt.Errorf("update user: %w", err)
+	}
+	slog.Info("password reset", "login", login, "username", u.Username, "user_id", u.ID)
+	return nil
 }
