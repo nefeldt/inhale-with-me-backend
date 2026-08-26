@@ -18,6 +18,8 @@ type createSessionRequest struct {
 	Note       *string           `json:"note"`
 	Mood       *string           `json:"mood"`
 	Location   *string           `json:"location"`
+	Lat        *float64          `json:"lat"`
+	Lng        *float64          `json:"lng"`
 	CostCents  *int64            `json:"cost_cents"`
 	Visibility *model.Visibility `json:"visibility"`
 	OccurredAt *time.Time        `json:"occurred_at"`
@@ -63,6 +65,17 @@ func (a *API) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 	if req.Mood != nil && strings.TrimSpace(*req.Mood) != "" && !model.Mood(strings.TrimSpace(*req.Mood)).Valid() {
 		fields["mood"] = "invalid mood"
 	}
+	var lat, lng *float64
+	if req.Lat != nil || req.Lng != nil {
+		switch {
+		case req.Lat == nil || req.Lng == nil:
+			fields["lat"] = "lat and lng must be provided together"
+		case *req.Lat < -90 || *req.Lat > 90 || *req.Lng < -180 || *req.Lng > 180:
+			fields["lat"] = "invalid coordinates"
+		default:
+			lat, lng = req.Lat, req.Lng
+		}
+	}
 	if len(fields) > 0 {
 		writeValidation(w, fields)
 		return
@@ -81,6 +94,8 @@ func (a *API) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 		Note:       cleanPtr(req.Note),
 		Mood:       cleanPtr(req.Mood),
 		Location:   cleanPtr(req.Location),
+		Lat:        lat,
+		Lng:        lng,
 		CostCents:  req.CostCents,
 		Visibility: visibility,
 		OccurredAt: occurredAt,

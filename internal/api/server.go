@@ -121,6 +121,8 @@ func (a *API) Router() http.Handler {
 			// Location sharing (one-to-one, time-limited)
 			r.Post("/location-shares", a.handleCreateLocationShare)
 			r.Get("/location-shares", a.handleListLocationShares)
+
+			r.Get("/map", a.handleMap)
 		})
 	})
 

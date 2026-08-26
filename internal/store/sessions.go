@@ -65,6 +65,24 @@ func (s *Store) AllSessionsByUser(userID string) ([]model.SmokeSession, error) {
 	return out, err
 }
 
+// LocatedSessionsSince returns sessions for the given users that carry a
+// location and occurred at or after `since`, newest-first and excluding private
+// ones. The caller dedupes to one-per-user for map presence.
+func (s *Store) LocatedSessionsSince(userIDs []string, since time.Time) ([]model.SmokeSession, error) {
+	if len(userIDs) == 0 {
+		return []model.SmokeSession{}, nil
+	}
+	var out []model.SmokeSession
+	err := s.db.
+		Where("user_id IN ?", userIDs).
+		Where("lat IS NOT NULL AND lng IS NOT NULL").
+		Where("occurred_at >= ?", since).
+		Where("visibility IN ?", []model.Visibility{model.VisibilityPublic, model.VisibilityFriends}).
+		Order("occurred_at DESC").
+		Find(&out).Error
+	return out, err
+}
+
 // UpdateSession persists all columns of sess.
 func (s *Store) UpdateSession(sess *model.SmokeSession) error {
 	return translate(s.db.Save(sess).Error)

@@ -49,6 +49,10 @@ type SmokeSession struct {
 	Note       *string     `json:"note"`
 	Mood       *string     `json:"mood"`
 	Location   *string     `json:"location"`
+	// Lat/Lng are the coordinates captured when the session was logged. When
+	// present (and recent) they put the user on their friends' map.
+	Lat        *float64    `json:"lat"`
+	Lng        *float64    `json:"lng"`
 	CostCents  *int64      `json:"cost_cents"`
 	Visibility Visibility  `gorm:"not null;default:friends" json:"visibility"`
 	OccurredAt time.Time   `gorm:"index" json:"occurred_at"`
