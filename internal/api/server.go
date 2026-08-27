@@ -119,8 +119,7 @@ func (a *API) Router() http.Handler {
 			r.Delete("/custom-types/{name}", a.handleDeleteCustomType)
 
 			// Location sharing (one-to-one, time-limited)
-			r.Post("/location-shares", a.handleCreateLocationShare)
-			r.Get("/location-shares", a.handleListLocationShares)
+			r.Post("/come-over", a.handleComeOver)
 
 			r.Get("/map", a.handleMap)
 		})

@@ -11,28 +11,26 @@ import (
 // friends' map. After it, they drop off until they log another session.
 const presenceTTL = 90 * time.Minute
 
-// mapPin is one person visible on the caller's map.
+// mapPin is one person visible on the caller's map: a friend who is actively
+// smoking (logged a located session within the presence window).
 type mapPin struct {
 	User      model.PublicUser `json:"user"`
 	Lat       float64          `json:"lat"`
 	Lng       float64          `json:"lng"`
-	Kind      string           `json:"kind"` // "smoking" | "coming_over"
+	Kind      string           `json:"kind"` // always "smoking"
 	Type      *string          `json:"type"`
 	Subtype   *string          `json:"subtype"`
-	Message   *string          `json:"message"`
 	At        time.Time        `json:"at"`
 	ExpiresAt time.Time        `json:"expires_at"`
 }
 
-// handleMap returns the people currently on the caller's map: friends who
-// logged a located session within the presence window ("smoking"), plus active
-// directed location shares sent to the caller ("coming_over"). At most one pin
-// per person — the most recent event wins.
+// handleMap returns the friends currently on the caller's map: those who logged
+// a located session within the presence window. At most one pin per person (the
+// most recent session wins).
 func (a *API) handleMap(w http.ResponseWriter, r *http.Request) {
 	me := currentUserID(r)
 	pins := map[string]mapPin{}
 
-	// 1. Friends who are actively smoking (a located session in the window).
 	friendIDs, err := a.store.FriendIDs(me)
 	if err != nil {
 		writeStoreError(w, err)
@@ -68,32 +66,6 @@ func (a *API) handleMap(w http.ResponseWriter, r *http.Request) {
 				At:        sess.OccurredAt,
 				ExpiresAt: sess.OccurredAt.Add(presenceTTL),
 			}
-		}
-	}
-
-	// 2. Directed "Komme vorbei" shares sent to me. These replace a smoking pin
-	// for the same person only when they are more recent.
-	shares, err := a.store.ActiveLocationSharesForRecipient(me)
-	if err != nil {
-		writeStoreError(w, err)
-		return
-	}
-	for _, ls := range shares {
-		if existing, seen := pins[ls.SenderID]; seen && existing.At.After(ls.CreatedAt) {
-			continue
-		}
-		sender, err := a.store.GetUserByID(ls.SenderID)
-		if err != nil {
-			continue
-		}
-		pins[ls.SenderID] = mapPin{
-			User:      sender.Public(),
-			Lat:       ls.Lat,
-			Lng:       ls.Lng,
-			Kind:      "coming_over",
-			Message:   ls.Message,
-			At:        ls.CreatedAt,
-			ExpiresAt: ls.ExpiresAt,
 		}
 	}
 
