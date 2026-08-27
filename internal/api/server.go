@@ -22,6 +22,7 @@ type API struct {
 	cfg       config.Config
 	notifier  push.Notifier
 	dummyHash string
+	comeOver  *rateLimiter
 }
 
 // New builds an API. A nil notifier defaults to a no-op (push disabled).
@@ -33,7 +34,7 @@ func New(st *store.Store, tokens *auth.Manager, cfg config.Config, notifier push
 	// non-existent account still runs a comparison — closing the timing side
 	// channel that would otherwise reveal whether an account is registered.
 	dummy, _ := auth.HashPassword("inhale-with-me-timing-equalizer", cfg.BcryptCost)
-	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, dummyHash: dummy}
+	return &API{store: st, tokens: tokens, cfg: cfg, notifier: notifier, dummyHash: dummy, comeOver: newRateLimiter(comeOverCooldown)}
 }
 
 // Router returns the fully configured HTTP handler.

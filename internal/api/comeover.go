@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/nfeldt/inhale-with-me/internal/store"
 )
@@ -42,6 +43,12 @@ func (a *API) handleComeOver(w http.ResponseWriter, r *http.Request) {
 	}
 	if !friends {
 		writeError(w, http.StatusForbidden, "not_friends", "you can only do this with friends", nil)
+		return
+	}
+
+	// Anti-spam: at most one nudge to the same friend per cooldown window.
+	if !a.comeOver.allow(me+":"+recipient.ID, time.Now()) {
+		writeError(w, http.StatusTooManyRequests, "rate_limited", "You already let them know — give it a few minutes.", nil)
 		return
 	}
 
