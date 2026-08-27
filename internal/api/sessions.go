@@ -138,6 +138,7 @@ func (a *API) notifyFriendsOfSession(sess *model.SmokeSession) {
 		}
 		body := fmt.Sprintf("%s just had a %s", name, sess.Type)
 		invalid := a.notifier.Send(tokens, "Inhale With Me", body, map[string]string{
+			"kind":      "session",
 			"type":      string(sess.Type),
 			"sessionId": sess.ID,
 			"authorId":  sess.UserID,

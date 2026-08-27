@@ -110,9 +110,50 @@ func runCommand(args []string, cfg config.Config) error {
 			return fmt.Errorf("usage: server reset-password <login> <new-password>")
 		}
 		return resetPassword(cfg, args[1], args[2])
+	case "list-reports":
+		return listReports(cfg)
 	default:
-		return fmt.Errorf("unknown command %q (available: reset-password)", args[0])
+		return fmt.Errorf("unknown command %q (available: reset-password, list-reports)", args[0])
 	}
+}
+
+// listReports prints filed content reports (newest first) to stdout.
+func listReports(cfg config.Config) error {
+	db, err := database.Open(cfg.DBPath, !cfg.IsProduction())
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+	defer func() {
+		if sqlDB, err := db.DB(); err == nil {
+			_ = sqlDB.Close()
+		}
+	}()
+
+	st := store.New(db)
+	reports, err := st.ListReports(200)
+	if err != nil {
+		return fmt.Errorf("list reports: %w", err)
+	}
+	if len(reports) == 0 {
+		fmt.Println("No reports.")
+		return nil
+	}
+	uname := func(id string) string {
+		if u, err := st.GetUserByID(id); err == nil {
+			return "@" + u.Username
+		}
+		return id
+	}
+	fmt.Printf("%d report(s), newest first:\n", len(reports))
+	for _, rep := range reports {
+		sid := "-"
+		if rep.SessionID != nil {
+			sid = *rep.SessionID
+		}
+		fmt.Printf("%s  %s reported %s  session=%s  reason=%q\n",
+			rep.CreatedAt.Format(time.RFC3339), uname(rep.ReporterID), uname(rep.ReportedUserID), sid, rep.Reason)
+	}
+	return nil
 }
 
 // resetPassword sets a user's password to newPassword, identified by username or

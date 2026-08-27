@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -31,9 +32,19 @@ func (a *API) handleReportSession(w http.ResponseWriter, r *http.Request) {
 	_ = decodeJSON(w, r, &req) // reason is optional; ignore empty/malformed bodies
 
 	sid := sessionID
-	if _, err := a.store.CreateReport(currentUserID(r), sess.UserID, &sid, strings.TrimSpace(req.Reason)); err != nil {
+	reason := strings.TrimSpace(req.Reason)
+	rep, err := a.store.CreateReport(currentUserID(r), sess.UserID, &sid, reason)
+	if err != nil {
 		writeStoreError(w, err)
 		return
 	}
+	// Surface the report in the server logs so an operator can act on it (there
+	// is no admin UI); also retrievable via `server list-reports`.
+	slog.Warn("content reported",
+		"report_id", rep.ID,
+		"reporter_id", currentUserID(r),
+		"reported_user_id", sess.UserID,
+		"session_id", sessionID,
+		"reason", reason)
 	w.WriteHeader(http.StatusNoContent)
 }

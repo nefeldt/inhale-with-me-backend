@@ -77,8 +77,14 @@ func bucket(sessions []model.SmokeSession, from *time.Time, costMap map[model.Se
 		if from != nil && s.OccurredAt.Before(*from) {
 			continue
 		}
-		b.TotalCount++
-		b.ByType[s.Type]++
+		// Count units smoked, not log entries: logging "2 cigarettes" at once
+		// should count as 2 (quick-log quantities are whole numbers).
+		units := int(math.Round(s.Quantity))
+		if units < 1 {
+			units = 1
+		}
+		b.TotalCount += units
+		b.ByType[s.Type] += units
 		b.TotalQuantity += s.Quantity
 		b.EstimatedCostCents += sessionCost(s, costMap)
 	}
